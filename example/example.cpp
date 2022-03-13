@@ -199,20 +199,10 @@ int main(int argc, char** argv)
 
     if(cmd == "init")
     {
-        int ret = queue.Create(0x123456);
-        if(ret != 0)
-        {
-            printf("create shm error,ret=%d\n", ret);
-            return 0;
-        }
-    }
-    else if(cmd == "setsize")
-    {
         if(argc <= 2)
         {
             printf("please input cmd\n");
-            printf("./exampled init\n");
-            printf("./exampled setsize [size](<=100000)\n");
+            printf("./exampled init [size](<=100000)\n");
     	    printf("./exampled producer [message]\n");
     	    printf("./exampled consumer\n");
     	    printf("./exampled producer_batch [message]\n");
@@ -236,8 +226,7 @@ int main(int argc, char** argv)
         if(argc <= 2)
         {
             printf("please input cmd\n");
-            printf("./exampled init\n");
-            printf("./exampled setsize [size](<=100000)\n");
+            printf("./exampled init [size](<=100000)\n");
     	    printf("./exampled producer [message]\n");
     	    printf("./exampled consumer\n");
     	    printf("./exampled producer_batch [message]\n");
@@ -287,8 +276,7 @@ int main(int argc, char** argv)
         if(argc <= 2)
         {
             printf("please input cmd\n");
-            printf("./exampled init\n");
-            printf("./exampled setsize [size](<=100000)\n");
+            printf("./exampled init [size](<=100000)\n");
     	    printf("./exampled producer [message]\n");
     	    printf("./exampled consumer\n");
     	    printf("./exampled producer_batch [message]\n");
@@ -357,8 +345,7 @@ int main(int argc, char** argv)
         if(argc <= 2)
         {
             printf("please input cmd\n");
-            printf("./exampled init\n");
-            printf("./exampled setsize [size](<=100000)\n");
+            printf("./exampled init [size](<=100000)\n");
     	    printf("./exampled producer [message]\n");
     	    printf("./exampled consumer\n");
     	    printf("./exampled producer_batch [message]\n");
@@ -382,8 +369,7 @@ int main(int argc, char** argv)
     else
     {
         printf("please input cmd\n");
-        printf("./exampled init\n");
-        printf("./exampled setsize [size](<=100000)\n");
+        printf("./exampled init [size](<=100000)\n");
 	    printf("./exampled producer [message]\n");
 	    printf("./exampled consumer\n");
 	    printf("./exampled producer_batch [message]\n");
