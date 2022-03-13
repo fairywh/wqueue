@@ -80,11 +80,6 @@ public:
 
 		return 0;
 	}
-
-	int Create(int shm_key, int memory_size)
-	{// to do
-		return -21;
-	}
 	/*
 		ret:
 		-1	full
