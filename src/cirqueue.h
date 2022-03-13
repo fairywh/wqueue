@@ -171,17 +171,9 @@ public:
         __sync_sub_and_fetch(&m_info->m_curr_nr, 1);
 
         return 0;
-            
-        
-
-        
-
-        
     }
 
-    
-
-    unsigned get_curr_nr() const
+	unsigned get_curr_nr() const
     {
         if(!m_info || !m_pData)
         {// not initialize
@@ -189,18 +181,12 @@ public:
         }
         return m_info->m_curr_nr;
     }
+
 private:
-
-    
-
-
     cir_queue(const cir_queue&);
     const cir_queue& operator=(const cir_queue&);
 
-    
-
-
-    shm_queue_header *m_info;
+	shm_queue_header *m_info;
 
     T* m_pData;
         

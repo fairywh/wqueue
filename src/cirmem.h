@@ -1,3 +1,7 @@
+/*
+ * wqueue
+ * Copyright (c) 2022 fairywh
+ */
 #ifndef __EX_CIRQUEUE__H__
 #define __EX_CIRQUEUE__H__
 
@@ -38,27 +42,6 @@ struct shm_cirmem_header
     volatile uint64_t m_WritePos_r;
 };
 #pragma pack()
-
-inline void PrintBuffer(const void *buffer, unsigned int size, int level = 8)
-{// level级别比开放级别高，才能打印
-    //if(Cumulus::Logs::GetLevel() < level)
-        //return;
-    
-    printf("size:   %d\ncontent:    \n", size);
-
-    for(unsigned int tmp = 0; tmp < size; tmp ++){
-    
-        if(*((char *)buffer + tmp) < 0){
-            char b = (*((char *)buffer + tmp) >> 4)&0x0f;
-            char c = *((char *)buffer + tmp)&0x0f;
-
-            printf("%x%x ", b,c);
-        }
-        else 
-            printf("%02x ", *((char *)buffer + tmp));
-    }
-    printf("end\n");
-}
 
 class cir_mem
 {
@@ -227,9 +210,7 @@ public:
         return 0;
     }
 
-    
-
-    unsigned get_curr_nr() const
+	unsigned get_curr_nr() const
     {
         if(!m_info || !m_pData)
         {// not initialize
@@ -270,17 +251,10 @@ public:
         }
     }
 private:
-
-    
-
-
     cir_mem(const cir_mem&);
     const cir_mem& operator=(const cir_mem&);
 
-    
-
-
-    shm_cirmem_header *m_info;
+	shm_cirmem_header *m_info;
 
     char* m_pData;
 
