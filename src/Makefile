@@ -21,7 +21,7 @@ all: $(LIB)
 $(LIB) : $(CPP_OBJS)  $(C_OBJS)
 	rm -f $@
 	ar rc $@ $(CPP_OBJS)  $(C_OBJS)
-	rm -f $(CPP_OBJS)  $(C_OBJS)
+#rm -f $(CPP_OBJS)  $(C_OBJS)
     
 .c.o:
 	$(CC)  $(CFLAGS) -c  $(INCLUDE) $< 
