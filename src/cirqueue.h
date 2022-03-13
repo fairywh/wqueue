@@ -110,12 +110,8 @@ public:
         {// not initialize
             return -2;
         }
-        
-        
-        
-        
-        
-        uint64_t Pos, NextPos;
+
+		uint64_t Pos, NextPos;
         
         do
         {
