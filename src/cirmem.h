@@ -5,7 +5,6 @@
 #ifndef __EX_CIRQUEUE__H__
 #define __EX_CIRQUEUE__H__
 
-
 /*
 	
 */
@@ -20,12 +19,10 @@
 #include <time.h>
 #include <stdint.h>
 
-
 extern "C"
 {
 	#include "oi_shm.h"
 }
-#include "pthread.h"
 #define MAX_BUFFER_SIZE 	1 * 1024 * 1024 * 1024
 #define USE_LOCAL_MEMORY	1
 #pragma pack(1)
@@ -35,10 +32,10 @@ struct shm_cirmem_header
 	
 	volatile uint64_t m_curr_nr;
 	
-	volatile uint64_t m_ReadPos; //ÉêÇëµÄÎ»ÖÃ
+	volatile uint64_t m_ReadPos; //ç”³è¯·çš„ä½ç½®
 	volatile uint64_t m_ReadPos_r;
 	
-	volatile uint64_t m_WritePos; //ÉêÇëµÄÎ»ÖÃ
+	volatile uint64_t m_WritePos; //ç”³è¯·çš„ä½ç½®
 	volatile uint64_t m_WritePos_r;
 };
 #pragma pack()
@@ -61,10 +58,10 @@ public:
 	
 	int Init(int shm_key, uint64_t mem_size = 0)	// max 1G
 	{
-		if(m_pData) {
+		if (m_pData) {
 			return 0;
 		}
-		if(mem_size > MAX_BUFFER_SIZE)
+		if (mem_size > MAX_BUFFER_SIZE)
 		{
 			return -1;
 		}
@@ -88,58 +85,48 @@ public:
 	*/
 	int push(char *buffer, uint64_t size)
 	{
-		if((!m_info) || (!m_pData))
-		{// not initialize
+		if ((!m_info) || (!m_pData)) {// not initialize
 			return -2;
 		}
 		
 		uint64_t Pos, NextPos;
 		
-		do
-		{
+		do {
 			Pos = m_info->m_WritePos;
 			
 			NextPos = (Pos + size + 8) % m_info->m_max_nr;	// head is length
 			
-			//if (NextPos == m_info->m_ReadPos_r)
-			if (GetWritableSize() < size + 8)
-			{
+			if (GetWritableSize() < size + 8) {
 				return -1;
 			}
-		} while(!__sync_bool_compare_and_swap(&m_info->m_WritePos, Pos, NextPos));
+		} while (!__sync_bool_compare_and_swap(&m_info->m_WritePos, Pos, NextPos));
 
-		if(NextPos > Pos)
+		if (NextPos > Pos)
 		{
 			*(uint64_t *)(m_pData + Pos) = size;
 			memcpy(m_pData + Pos + 8, buffer, size);
-		}
-		else
-		{
-			if(Pos + 8 < m_info->m_max_nr)
-			{
+		} else {
+			if(Pos + 8 < m_info->m_max_nr) {
 				*(uint64_t *)(m_pData + Pos) = size;
 				memcpy(m_pData + Pos + 8, buffer, m_info->m_max_nr - Pos - 8);
 				memcpy(m_pData, buffer + m_info->m_max_nr - Pos - 8, NextPos);
-			}
-			else
-			{
+			} else {
 				char temp_buffer[8] = {0};
 				*(uint64_t *)temp_buffer = size;
 
 				//PrintBuffer(temp_buffer, 8);
 				
-				memcpy(m_pData + Pos, temp_buffer, m_info->m_max_nr - Pos); // ¿½±´lengthÍ·²¿µÄ¼¸¸ö×Ö½Ú
-				memcpy(m_pData, temp_buffer + m_info->m_max_nr - Pos, 8 - (m_info->m_max_nr - Pos)); // ¿½±´lengthºóÃæ¼¸¸ö×Ö½Ú
-				memcpy(m_pData + 8 - (m_info->m_max_nr - Pos), buffer, size);  // ¿½±´Êý¾Ý
+				memcpy(m_pData + Pos, temp_buffer, m_info->m_max_nr - Pos); // æ‹·è´lengthå¤´éƒ¨çš„å‡ ä¸ªå­—èŠ‚
+				memcpy(m_pData, temp_buffer + m_info->m_max_nr - Pos, 8 - (m_info->m_max_nr - Pos)); // æ‹·è´lengthåŽé¢å‡ ä¸ªå­—èŠ‚
+				memcpy(m_pData + 8 - (m_info->m_max_nr - Pos), buffer, size);  // æ‹·è´æ•°æ®
 			}
 			
 		}
 
-		while(!__sync_bool_compare_and_swap(&m_info->m_WritePos_r, Pos, NextPos))
-		{
+		while (!__sync_bool_compare_and_swap(&m_info->m_WritePos_r, Pos, NextPos)) {
 			sched_yield();
 		}
-		__sync_add_and_fetch(&m_info->m_curr_nr, 1);	// ÏûÏ¢¸öÊý
+		__sync_add_and_fetch(&m_info->m_curr_nr, 1);	// æ¶ˆæ¯ä¸ªæ•°
 		
 		return 0;
 	}
@@ -151,25 +138,19 @@ public:
 	*/
 	int pop(char * buffer, uint64_t &size)
 	{	
-		if((!m_info) || (!m_pData))
-		{// not initialize
+		if ((!m_info) || (!m_pData)) {// not initialize
 			return -2;
 		}
 		
 		uint64_t Pos, NextPos;
-		do 
-		{
+		do {
 			Pos = m_info->m_ReadPos;
-			if (Pos == m_info->m_WritePos_r)
-			{
+			if (Pos == m_info->m_WritePos_r) {
 				return -1;
 			}
-			if(Pos + 8 < m_info->m_max_nr)
-			{
-				size = *(uint64_t *)(m_pData + Pos);  // µ±Ç°Êý¾ÝµÄ³¤¶È
-			}
-			else
-			{
+			if (Pos + 8 < m_info->m_max_nr) {
+				size = *(uint64_t *)(m_pData + Pos);  // å½“å‰æ•°æ®çš„é•¿åº¦
+			} else {
 				char temp_buffer[8] = {0};
 				memcpy(temp_buffer, m_pData + Pos, m_info->m_max_nr - Pos);
 				memcpy(temp_buffer + m_info->m_max_nr - Pos, m_pData, 8 - (m_info->m_max_nr - Pos));
@@ -177,27 +158,20 @@ public:
 			}
 			
 			NextPos = (Pos + size + 8) % m_info->m_max_nr;
-		} while(!__sync_bool_compare_and_swap(&m_info->m_ReadPos, Pos, NextPos));
+		} while (!__sync_bool_compare_and_swap(&m_info->m_ReadPos, Pos, NextPos));
 		
-		if(NextPos > Pos)
-		{
+		if (NextPos > Pos) {
 			memcpy(buffer, m_pData + Pos + 8, size);
-		}
-		else
-		{
-			if(Pos + 8 < m_info->m_max_nr)
-			{
+		} else {
+			if (Pos + 8 < m_info->m_max_nr) {
 				memcpy(buffer, m_pData + Pos + 8, m_info->m_max_nr - Pos - 8);
 				memcpy(buffer + m_info->m_max_nr - Pos - 8, m_pData, NextPos);
-			}
-			else
-			{
+			} else {
 			   memcpy(buffer, m_pData + 8 - (m_info->m_max_nr - Pos), size);
 			}
 			
 		}
-		while(!__sync_bool_compare_and_swap(&m_info->m_ReadPos_r, Pos, NextPos))
-		{
+		while (!__sync_bool_compare_and_swap(&m_info->m_ReadPos_r, Pos, NextPos)) {
 			sched_yield();
 		}
 		__sync_sub_and_fetch(&m_info->m_curr_nr, 1);
@@ -207,8 +181,7 @@ public:
 
 	unsigned get_curr_nr() const
 	{
-		if(!m_info || !m_pData)
-		{// not initialize
+		if (!m_info || !m_pData) {// not initialize
 			return 0;
 		}
 		return m_info->m_curr_nr;
@@ -216,12 +189,9 @@ public:
 
 	void PrintMem(uint64_t pos, unsigned int size)
 	{
-		if(size > 128 * 1024)
-		{
+		if(size > 128 * 1024) {
 			size = 128 * 1024;
 		}
-
-		
 		// print header
 		/*printf("max_nr=%lld\n", m_info->m_max_nr);
 		printf("curr_nr=%lld\n", m_info->m_curr_nr);
@@ -230,17 +200,13 @@ public:
 		printf("WritePos=%lld\n", m_info->m_WritePos);
 		printf("WritePos_r=%lld\n", m_info->m_WritePos_r);//*/
 
-		for(unsigned int tmp = 0; tmp < size; tmp ++)
-		{
-			if(*((char *)m_pData + tmp) < 0)
-			{
+		for (unsigned int tmp = 0; tmp < size; tmp ++) {
+			if (*((char *)m_pData + tmp) < 0) {
 				char b = (*((char *)m_pData + tmp) >> 4)&0x0f;
 				char c = *((char *)m_pData + tmp)&0x0f;
 
 				printf("%x%x ", b,c);
-			}
-			else
-			{
+			} else {
 				printf("%02x ", *((char *)m_pData + tmp));
 			}
 		}
