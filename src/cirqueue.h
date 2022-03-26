@@ -59,20 +59,14 @@ public:
     
     int Init(int shm_key, unsigned int max_count = 0)
     {
-        if(max_count > BATCH)
-        {
+        if (max_count > BATCH) {
             return -1;
         }
         void *pData;
         
-
         uint32_t shm_size = BATCH * sizeof(T) + sizeof(shm_queue_header);
         
-        
-        if (GetShm2(&pData, shm_key, shm_size, IPC_CREAT | 0666) < 0) 
-        {
-            
-            
+        if (GetShm2(&pData, shm_key, shm_size, IPC_CREAT | 0666) < 0) {
             return -21;
         }
 
@@ -81,12 +75,12 @@ public:
 
         // 判断最大消息个数有没有调整过
         
-        if(( (max_count > 0) && (max_count != m_info->m_max_nr)) || (m_info->node_size != sizeof(T)))
-        {
-            memset(pData, 0, shm_size);
+        if (((max_count > 0) && (max_count != m_info->m_max_nr))
+			|| (m_info->node_size != sizeof(T))) {
 
-            if (max_count > 0)
-            {
+			memset(pData, 0, shm_size);
+
+            if (max_count > 0) {
                 m_info->m_max_nr = max_count;
             }
 
@@ -106,28 +100,24 @@ public:
     */
     int push(const T& item)
     {
-        if((!m_info) || (!m_pData))
-        {// not initialize
+        if ((!m_info) || (!m_pData)) {// not initialize
             return -2;
         }
 
 		uint64_t Pos, NextPos;
         
-        do
-        {
+        do {
             Pos = m_info->m_WritePos;
             NextPos = (Pos + 1) % m_info->m_max_nr;
             
-            if (NextPos == m_info->m_ReadPos_r)
-            {
+            if (NextPos == m_info->m_ReadPos_r) {
                 return -1;
             }
-        } while(!__sync_bool_compare_and_swap(&m_info->m_WritePos, Pos, NextPos));
+        } while (!__sync_bool_compare_and_swap(&m_info->m_WritePos, Pos, NextPos));
 
         m_pData[Pos] = item;
 
-        while(!__sync_bool_compare_and_swap(&m_info->m_WritePos_r, Pos, NextPos))
-        {
+        while(!__sync_bool_compare_and_swap(&m_info->m_WritePos_r, Pos, NextPos)) {
             sched_yield();
         }
         __sync_add_and_fetch(&m_info->m_curr_nr, 1);    // 消息个数
@@ -142,17 +132,14 @@ public:
     */
     int pop(T& out)
     {   
-        if((!m_info) || (!m_pData))
-        {// not initialize
+        if((!m_info) || (!m_pData)) {// not initialize
             return -2;
         }
         
         uint64_t Pos, NextPos;
-        do 
-        {
+        do {
             Pos = m_info->m_ReadPos;
-            if (Pos == m_info->m_WritePos_r)
-            {
+            if (Pos == m_info->m_WritePos_r) {
                 return -1;
             }
             NextPos = (Pos + 1) % m_info->m_max_nr;
@@ -160,8 +147,7 @@ public:
         
         out = m_pData[Pos];
         
-        while(!__sync_bool_compare_and_swap(&m_info->m_ReadPos_r, Pos, NextPos))
-        {
+        while (!__sync_bool_compare_and_swap(&m_info->m_ReadPos_r, Pos, NextPos)) {
             sched_yield();
         }
         __sync_sub_and_fetch(&m_info->m_curr_nr, 1);
